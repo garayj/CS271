@@ -1,207 +1,195 @@
-TITLE Programming Assignment #3 Accumulator    (Project03.asm)
+TITLE Integer Accumulator	(Program3.asm)
 
-; Author:									Andrew Pierno
-; Description:
-;1. Display the program title and programmer’s name.
-;2. Get the user’s name, and greet the user.
-;3. Display instructions for the user.
-;4. Repeatedly prompt the user to enter a number. Validate the user input to be in [-100, -1] (inclusive).
-;		Count and accumulate the valid user numbers until a non-negative number is entered. (The non-
-;		negative number is discarded.)
-;5. Calculate the (rounded integer) average of the negative numbers. 6. Display:
-;	i. the number of negative numbers entered (Note: if no negative numbers were entered, display a special message and skip to iv.)
-;	ii. the sum of negative numbers entered
-;	iii. the average, rounded to the nearest integer (e.g. -20.5 rounds to -20)
-;	iv. a parting message (with the user’s name)
+; Author: Jose R Garay Jr
+; Last Modified: 5/5/2019
+; OSU email address: garayj@oregonstate.edu
+; Course number/section: CS271
+; Project Number: 3                 Due Date: 5/5/2019
+; Description: This program gathers prompts the user to an integer between the values -100 and
+; -1 until a non-negative number is entered. Once the non-negative number is entered, all the
+; previous values, bar the non-negative number are summed as well as averaged. The program then
+; then thanks the user for playing and then exits.
 
 INCLUDE Irvine32.inc
 
+NAME_MAX = 40
+MIN = -100
+
 .data
 
-welcome					       BYTE	"Welcome to the amazing Integer Accumulator by Andrew Pierno", 0
-instructions_1			   BYTE	"Please enter numbers between [-100, -1].", 0
-instructions_2			   BYTE	"Then, enter a non-negative number to see the amazing accumulator in action!", 0
-instructions_3			   BYTE	" Enter a number: ", 0
-userNameInstructions   BYTE	"What's your name, friend?", 0
-greeting				       BYTE	"Hi, ", 0
-goodbye					       BYTE	"Ta ta for now, ", 0
-number					       DWORD  ?
-userName				       BYTE   21 DUP(0)
-userNameByteCount		   DWORD	?
-count					         DWORD	1
-accumulator				     DWORD	0
-totalIs					       BYTE	"The total is:                  ", 0
-quantNumbersEntered 	 BYTE	"Amount of numbers accumulated:  ", 0
-roundedAve_prompt		   BYTE	"The Rounded Average is:        ", 0
-roundedAve				     DWORD  0
-remainder				       DWORD	?
-floating_point_point	 BYTE	".",0
-floating_point_prompt	 BYTE	"As a floating point number:    ", 0
-neg1k					         DWORD  -1000
-onek					         DWORD	1000
-subtractor				     DWORD	?
-floating_point			   DWORD	?
+; Strings that will be shown to the user.
+welcome			BYTE		"Welcome to the Integer Accumulator by Jose Garay", 0
+EC_1			BYTE		"**EC: Number the lines during user input.", 0
+EC_2			BYTE		"**EC: Calculate and display the average as a floating-point number, rounded to the nearest .001", 0
+name_prompt		BYTE		"What is your name? ", 0
+hello			BYTE		"Hello, ", 0
+instruct1		BYTE		"Please enter numbers in [-100, -1].", 0
+instruct2		BYTE		"Enter a non-negative number when you are finished to see the results.", 0
+num_prompt		BYTE		" Enter a number: ", 0
+count_res1		BYTE		"You entered ", 0
+count_res2		BYTE		" valid numbers.", 0
+sum_result		BYTE		"The sum of your valid numbers is ", 0
+ave_result		BYTE		"The rounded average is ", 0
+ave_float		BYTE		"The float-point average is ", 0
+point			BYTE		".", 0
+end_mess		BYTE		"Thank you for playing Integer Accumulator! It's been a pleasure to meet you, ", 0
+err_range		BYTE		"Opps that wasn't in range!", 0
+error_zero		BYTE		"You didn't enter any numbers!", 0
 
+; Variable constant because I can't multiply by an immediate operand.
+thousand		DWORD		1000
 
-;ec promp
-ec_prompt_1				     BYTE	"EC: Display as floating point value.", 0
-ec_prompt_2				     BYTE	"EC: Lines are numbered during user input.", 0
+; Counters for lines and number of integers entered.
+count			DWORD		0
+line_count		DWORD		1
 
-;constants
-LOWERLIMIT		=		 -100
-UPPERLIMIT		=		 -1
-
-;change text color, because white text is a little boring after a while
-val1 DWORD 11
-val2 DWORD 16
-
+; Variables to be defined by user or calculated.
+username		BYTE		NAME_MAX+1 DUP(?)
+sum				SDWORD		?
+ave				DWORD		?
+remain			DWORD		?
+float_ave		DWORD		?
+float_remain	DWORD		?
 
 .code
- main PROC
-	; Set text color to teal
-		mov  eax, val2
-		imul eax, 16
-		add  eax, val1
-		call setTextColor
 
-	; Programmer name and title of assignment
-  	call	 CrLf
-  	mov		 edx, OFFSET welcome
-  	call	 WriteString
-  	call	 CrLf
+main PROC
 
-	;ec prompts
-  	mov		 edx, OFFSET ec_prompt_1
-  	call	 WriteString
-  	call	 CrLf
-  	mov		 edx, OFFSET ec_prompt_2
-  	call	 WriteString
-  	call	 CrLf
+; Introduction
+		mov		edx, OFFSET welcome
+		call	WriteString
+		call	Crlf
+		call	Crlf
+		mov		edx, OFFSET EC_1
+		call	WriteString
+		call	Crlf
+		mov		edx, OFFSET EC_2
+		call	WriteString
+		call	Crlf
+		call	Crlf
 
-	; get user name
-  	mov		edx, OFFSET userNameInstructions
-  	call	WriteString
-  	call	CrLf
-  	mov		edx, OFFSET userName
-  	mov		ecx, SIZEOF userName
-  	call	ReadString
-  	mov		userNameByteCount, eax
+	; Get the user's name
+		mov		edx, OFFSET name_prompt
+		call	WriteString
+		mov		edx, OFFSET username 
+		mov		ecx, NAME_MAX
+		call	ReadString	
+		call	Crlf
 
-	;test username
-  	mov		edx, OFFSET greeting
-  	call	WriteString
-  	mov		edx, OFFSET userName
-  	call	WriteString
-  	call	CrLF
-
-	; assignment instructions
-  	mov		edx, OFFSET instructions_1
-  	call	WriteString
-  	call	CrLf
-  	mov		edx, OFFSET instructions_2
-  	call	WriteString
-  	call	CrLf
-  	mov		ecx, 0
+	; Greeting
+		mov		edx, OFFSET hello
+		call	WriteString
+		mov		edx, OFFSET username 
+		call	WriteString
+		call	Crlf
 
 
-	; loop to allow user to continue entering negative numbers
-	userNumbers:	;read user number
-			mov		eax, count
-			call	WriteDec
-			add		eax, 1
-			mov		count, eax
-			mov	  edx, OFFSET instructions_3
-			call	WriteString
-			call  ReadInt
-			mov   number, eax
-			cmp		eax,LOWERLIMIT
-			jb		accumulate;
-			cmp		eax, UPPERLIMIT
-			jg		accumulate
-			add		eax, accumulator
-			mov		accumulator, eax
-			loop	userNumbers
+; Instructions prompt
+		mov		edx, OFFSET instruct1
+		call	WriteString
+		call	Crlf	
+		mov		edx, OFFSET instruct2
+		call	WriteString
+		call	Crlf	
+		call	Crlf
 
+; Get Numbers from the user.
+	; While loop for getting another integer
+	GET_NUMBER:
+		mov		eax, line_count
+		call	WriteDec
+		inc		line_count
+		mov		edx, OFFSET num_prompt
+		call	WriteString
+		call	ReadInt
+		jns		CALCULATE_AVERAGE					; If the number entered is positive, jump to displaying results.
+		cmp		eax, MIN						
+		jb		MIN_ERROR							; If the number entered is less than the minimum number jump to error message.
+		jmp		ADD_TO_SUM
 
-	; do the accumulation
-	accumulate:
-			; test if they entered any valid numbers, if they didnt, jump to the sayGoodbye
-			mov		eax, count
-			sub		eax, 2
-			jz		sayGoodbye
-			mov		eax, accumulator
-			call	CrLF
+	MIN_ERROR:
+		mov		edx, OFFSET err_range
+		call	WriteString
+		call	Crlf
+		jmp		GET_NUMBER
 
-			; accumulated total
-			mov		edx, OFFSET  totalIs
-			call	WriteString
-			mov		eax, accumulator
-			call	WriteInt
-			call	CrLF
+	; Calculate the sum of the integers.
+	ADD_TO_SUM:
+		add		sum, eax
+		inc		count	
+		jmp		GET_NUMBER
 
-			; total numbers accumulated
-			mov		edx, OFFSET quantNumbersEntered
-			call	WriteString
-			mov		eax, count
-			sub		eax, 2
-			call	WriteDec
-			call	CrLf
+	; Calculate the average of the integers.
+	CALCULATE_AVERAGE:
+		cmp		count, 0
+		je		ERR_ZERO
+		mov		eax, sum
+		cdq
+		mov		ebx, count
+		idiv	ebx
+		mov		float_ave, eax
+		mov		ave, eax
 
-			; integer rounded average
-			mov		edx, OFFSET roundedAve_prompt
-			call	WriteString
-			mov		eax, 0
-			mov		eax, accumulator
-			cdq
-			mov		ebx, count
-			sub		ebx, 2
-			idiv	ebx
-			mov		roundedAve, eax
-			call	WriteInt
-			call	CrLf
+; Calculate the average of the integers with floats.
+		mov		eax, edx
+		mov		remain, eax
+		neg		remain
+		fld		remain	
+		fdiv	count	
+		fimul	thousand
+		frndint
+		fist	float_remain	
+		call	Crlf
 
-			; integer average for accumulator
-			mov		remainder, edx
-			mov		edx, OFFSET floating_point_prompt
-			call	WriteString
-			call	WriteInt
-			mov		edx, OFFSET floating_point_point
-			call	WriteString
+; Display the results to the user.
+	;Display the count results.
+		mov		edx, OFFSET count_res1
+		call	WriteString
+		mov		eax, count
+		call	WriteDec	
+		mov		edx, OFFSET	count_res2
+		call	WriteString
+		call	Crlf
 
+	;Display the sum results.
+		mov		edx, OFFSET sum_result
+		call	WriteString
+		mov		eax, sum
+		call	WriteInt
+		call	Crlf
 
-			; fancy stuff for floating point creation
-			mov		eax, remainder
-			mul		neg1k
-			mov		remainder, eax ; eax now holds remainder * -1000
-			mov		eax, count
-			sub		eax, 2		   ; ebx now holds something?
-			mul		onek
-			mov		subtractor, eax
+	;Display the average results floating point style.
+		mov		edx, OFFSET	ave_float
+		call	WriteString
+		mov		eax, float_ave
+		call	WriteInt
+		mov		edx, OFFSET	point
+		call	WriteString
+		mov		eax, float_remain
+		call	WriteDec
+		call	Crlf
 
-			; fancy stack stuff for floating point creation
-			fld		remainder
-			fdiv	subtractor
-			fimul	onek
-			frndint
-			fist	floating_point
-			mov		eax, floating_point
-			call	WriteDec
-			call	CrLf
-
-
-	; say goodbye
-	sayGoodbye:
-			call	CrLf
-			mov		edx, OFFSET goodbye
-			call	WriteString
-			mov		edx, OFFSET userName
-			call	WriteString
-			mov		edx, OFFSET floating_point_point
-			call	WriteString
-			call	CrLf
-			call	CrLf
-
-exit	; exit to operating system
+	;Display the average results.
+		mov		edx, OFFSET	ave_result 
+		call	WriteString
+		mov		eax, ave 
+		call	WriteInt
+		call	Crlf
+		jmp		EXIT_MESS
+		
+; Exit message
+	;Display error message if there were no valid inputs.
+	ERR_ZERO:
+		mov		edx, OFFSET error_zero
+		call	WriteString	
+		call	Crlf
+	;Display exit message.
+	EXIT_MESS:
+		mov		edx, OFFSET end_mess
+		call	WriteString
+		mov		edx, OFFSET username 
+		call	WriteString
+		call	Crlf
+	exit	; exit to operating system
 main ENDP
-
 END main
