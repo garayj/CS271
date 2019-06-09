@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/01/19 10:18:03
+Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/08/19 19:47:36
 1Designing low-level I/O procedures	(Project6.asm	     Page 1 - 1
 
 
@@ -32,27 +32,48 @@ Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/01/19 10:18:03
 			      C .LIST
 			      C 
 
+
  00000000			.data
- = FFFFFFFF			MAX = 4294967295
- = 00000000			MIN	= 0
-				getString	MACRO	dispString, buf 
-					push	edx
-					push	ecx
-					push	eax
-					mov		edx, OFFSET dispString
-					call	WriteString
-					call	Crlf
-					mov		edx, OFFSET buf
-					mov		ecx, SIZEOF buf
-					call	ReadString
-					pop		eax
-					pop		ecx
-					pop		edx
-					
+ = 00000064			MAX_LEN = 100
+
+				clearString		MACRO	clearString 
+					LOCAL NEXT_VALUE_TO_CLEAR
+						push	ebx
+						push	ecx
+						mov		ebx, 0 
+						mov		ecx, LENGTHOF clearString
+						
+					NEXT_VALUE_TO_CLEAR:
+						mov		clearString[ebx], 0
+						inc		ebx	
+						loop	NEXT_VALUE_TO_CLEAR	
+
+						pop		ecx
+						pop		ebx
+				ENDM
+
+				displayString	MACRO	inputStr
+						push	edx
+						mov		edx, inputStr
+						call	WriteString
+						pop		edx
+				ENDM
+
+				getString	MACRO	buffer, lenStr
+						push	eax
+						push	edx
+						push	ecx
+						mov		edx, buffer
+						mov		ecx, MAX_LEN
+						call	ReadString
+						mov		lenStr, eax	
+						pop		ecx
+						pop		edx
+						pop		eax	
 				ENDM
 
 
- 00000000 50 52 4F 47 52	intro1		BYTE	"PROGRAMMING ASSIGNMENT 6: Designing low-level I/O procedures", 0
+ 00000000 50 52 4F 47 52	intro1			BYTE	"PROGRAMMING ASSIGNMENT 6: Designing low-level I/O procedures", 0
 	   41 4D 4D 49 4E
 	   47 20 41 53 53
 	   49 47 4E 4D 45
@@ -65,12 +86,12 @@ Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/01/19 10:18:03
 	   70 72 6F 63 65
 	   64 75 72 65 73
 	   00
- 0000003D 57 72 69 74 74	intro2		BYTE	"Written by: Jose Garay", 0
+ 0000003D 57 72 69 74 74	intro2			BYTE	"Written by: Jose Garay", 0
 	   65 6E 20 62 79
 	   3A 20 4A 6F 73
 	   65 20 47 61 72
 	   61 79 00
- 00000054 50 6C 65 61 73	instruct1	BYTE	"Please procide 10 unsigned decimal integers.", 0
+ 00000054 50 6C 65 61 73	instruct1		BYTE	"Please procide 10 unsigned decimal integers.", 0
 	   65 20 70 72 6F
 	   63 69 64 65 20
 	   31 30 20 75 6E
@@ -79,7 +100,7 @@ Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/01/19 10:18:03
 	   69 6D 61 6C 20
 	   69 6E 74 65 67
 	   65 72 73 2E 00
- 00000081 45 61 63 68 20	instruct2	BYTE	"Each number needs to be small enough to fit inside a 32 bit register.", 0
+ 00000081 45 61 63 68 20	instruct2		BYTE	"Each number needs to be small enough to fit inside a 32 bit register.", 0
 	   6E 75 6D 62 65
 	   72 20 6E 65 65
 	   64 73 20 74 6F
@@ -93,7 +114,7 @@ Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/01/19 10:18:03
 	   20 62 69 74 20
 	   72 65 67 69 73
 	   74 65 72 2E 00
- 000000C7 41 66 74 65 72	instruct3	BYTE	"After you have finished inputting the raw numbers I will display a list of the integers, their sum, and their average value.", 0
+ 000000C7 41 66 74 65 72	instruct3		BYTE	"After you have finished inputting the raw numbers I will display a list of the integers, their sum, and their average value.", 0
 	   20 79 6F 75 20
 	   68 61 76 65 20
 	   66 69 6E 69 73
@@ -118,18 +139,18 @@ Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/01/19 10:18:03
 	   61 76 65 72 61
 	   67 65 20 76 61
 	   6C 75 65 2E 00
- 00000144 50 6C 65 61 73	prompt		BYTE	"Please enter an unsigned number: ", 0
+ 00000144 50 6C 65 61 73	prompt			BYTE	"Please enter an unsigned number: ", 0
 	   65 20 65 6E 74
 	   65 72 20 61 6E
 	   20 75 6E 73 69
 	   67 6E 65 64 20
 	   6E 75 6D 62 65
 	   72 3A 20 00
- 00000166 50 6C 65 61 73	reprompt	BYTE	"Please try again: ", 0
+ 00000166 50 6C 65 61 73	reprompt		BYTE	"Please try again: ", 0
 	   65 20 74 72 79
 	   20 61 67 61 69
 	   6E 3A 20 00
- 00000179 45 52 52 4F 52	ERROR		BYTE	"ERROR: You did not enter an unsigned number or your number was too big.",0
+ 00000179 45 52 52 4F 52	error			BYTE	"ERROR: You did not enter an unsigned number or your number was too big.",0
 	   3A 20 59 6F 75
 	   20 64 69 64 20
 	   6E 6F 74 20 65
@@ -144,69 +165,481 @@ Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/01/19 10:18:03
 	   61 73 20 74 6F
 	   6F 20 62 69 67
 	   2E 00
- 000001C1 59 6F 75 20 65	dispArray	BYTE	"You entered the following numbers:", 0
+ 000001C1 59 6F 75 20 65	dispArray		BYTE	"You entered the following numbers:", 0
 	   6E 74 65 72 65
 	   64 20 74 68 65
 	   20 66 6F 6C 6C
 	   6F 77 69 6E 67
 	   20 6E 75 6D 62
 	   65 72 73 3A 00
- 000001E4 54 68 65 20 73	dispSum		BYTE	"The sum of these numbers is: ", 0
+ 000001E4 54 68 65 20 73	dispSum			BYTE	"The sum of these numbers is: ", 0
 	   75 6D 20 6F 66
 	   20 74 68 65 73
 	   65 20 6E 75 6D
 	   62 65 72 73 20
 	   69 73 3A 20 00
- 00000202 54 68 65 20 61	dispAve		BYTE	"The average is: ", 0
+ 00000202 54 68 65 20 61	dispAve			BYTE	"The average is: ", 0
 	   76 65 72 61 67
 	   65 20 69 73 3A
 	   20 00
- 00000213 54 68 61 6E 6B	thanks		BYTE	"Thanks for playing!", 0
+ 00000213 54 68 61 6E 6B	thanks			BYTE	"Thanks for playing!", 0
 	   73 20 66 6F 72
 	   20 70 6C 61 79
 	   69 6E 67 21 00
+ 00000227 2C 20 00		commaSpace		BYTE	", ", 0
 
- 00000227  0000000A [		array		DWORD	10 DUP(0)
+ 0000022A  0000000A [		array			DWORD	10 DUP(0)
 	    00000000
 	   ]
 
- 0000024F  0000000B [		buffer		BYTE	11 DUP(0)
+ 00000252  00000064 [		buffer			BYTE	MAX_LEN DUP(0)
 	    00
 	   ]
+ 000002B6 00000000		bufferLen		DWORD	?
+ 000002BA 00000000		average			DWORD	?
+ 000002BE 00000000		sum				DWORD	?
 
 
 
 
  00000000			.code
  00000000			main PROC
- 00000000  B8 00000000			mov		eax, 0
-					getString	prompt, buffer
- 00000005  52		     1		push	edx
- 00000006  51		     1		push	ecx
- 00000007  50		     1		push	eax
- 00000008  BA 00000144 R     1		mov		edx, OFFSET prompt
- 0000000D  E8 00000000 E     1		call	WriteString
- 00000012  E8 00000000 E     1		call	Crlf
- 00000017  BA 0000024F R     1		mov		edx, OFFSET buffer
- 0000001C  B9 0000000B	     1		mov		ecx, SIZEOF buffer
- 00000021  E8 00000000 E     1		call	ReadString
- 00000026  58		     1		pop		eax
- 00000027  59		     1		pop		ecx
- 00000028  5A		     1		pop		edx
- 00000029  A0 0000024F R		mov		al, buffer
- 0000002E  E8 00000000 E		call	WriteDec
+ 00000000  68 00000000 R			push	OFFSET intro1
+ 00000005  68 0000003D R			push	OFFSET intro2
+ 0000000A  E8 00000085				call	introduction
+
+ 0000000F  68 00000054 R			push	OFFSET instruct1
+ 00000014  68 00000081 R			push	OFFSET instruct2
+ 00000019  68 000000C7 R			push	OFFSET instruct3
+ 0000001E  E8 00000097				call	instruction
+
+ 00000023  68 0000022A R			push	OFFSET array
+ 00000028  68 00000252 R			push	OFFSET buffer
+ 0000002D  68 00000179 R			push	OFFSET error
+ 00000032  68 00000166 R			push	OFFSET reprompt
+ 00000037  68 00000144 R			push	OFFSET prompt
+ 0000003C  E8 000000AE				call	getInput
+
+ 00000041  68 000002BE R			push	OFFSET sum
+ 00000046  68 000002BA R			push	OFFSET average
+ 0000004B  6A 0A				push	LENGTHOF array
+ 0000004D  68 0000022A R			push	OFFSET array
+ 00000052  E8 000000D1				call	calculate
+
+ 00000057  FF 35 000002BE R			push	sum
+ 0000005D  FF 35 000002BA R			push	average
+ 00000063  68 00000227 R			push	OFFSET commaSpace
+ 00000068  68 000001C1 R			push	OFFSET dispArray
+ 0000006D  68 000001E4 R			push	OFFSET dispSum
+ 00000072  68 00000202 R			push	OFFSET dispAve
+ 00000077  6A 0A				push	LENGTHOF array
+ 00000079  68 0000022A R			push	OFFSET array
+ 0000007E  E8 000000DA				call	displayResults
+
+ 00000083  68 00000213 R			push	OFFSET thanks
+ 00000088  E8 0000013E				call	thankYou
 					
 					
 
 					exit	; exit to operating system
- 00000033  6A 00	   *	    push   +000000000h
- 00000035  E8 00000000 E   *	    call   ExitProcess
- 0000003A			main ENDP
+ 0000008D  6A 00	   *	    push   +000000000h
+ 0000008F  E8 00000000 E   *	    call   ExitProcess
+ 00000094			main ENDP
 
-				; (insert additional procedures here)
+				; *************************************************************************************************
+				; Description: Introduces the program to the user.
+				; Receives: Two instruction strings on the stack.
+				; Returns: Nothing.
+				; Preconditions: Nothing.
+				; Registers Changed: None.
+				; *************************************************************************************************
+ 00000094			introduction PROC
+ 00000094  C8 0000 00				enter	0,0
+						displayString	[ebp + 12]
+ 00000098  52		     1			push	edx
+ 00000099  8B 55 0C	     1			mov		edx, [ebp + 12]
+ 0000009C  E8 00000000 E     1			call	WriteString
+ 000000A1  5A		     1			pop		edx
+ 000000A2  E8 00000000 E			call Crlf
+						displayString	[ebp + 8]
+ 000000A7  52		     1			push	edx
+ 000000A8  8B 55 08	     1			mov		edx, [ebp + 8]
+ 000000AB  E8 00000000 E     1			call	WriteString
+ 000000B0  5A		     1			pop		edx
+ 000000B1  E8 00000000 E			call Crlf
+ 000000B6  C9					leave
+ 000000B7  C2 0008				ret	8
+ 000000BA			introduction ENDP
+
+				; *************************************************************************************************
+				; Description: Prints instructions of the program to the console.
+				; Receives: Three instruction strings.
+				; Returns: Nothing.
+				; Preconditions: None.
+				; Registers Changed: None.
+				; *************************************************************************************************
+ 000000BA			instruction PROC
+ 000000BA  C8 0000 00				enter 0,0
+						displayString	[ebp + 16]
+ 000000BE  52		     1			push	edx
+ 000000BF  8B 55 10	     1			mov		edx, [ebp + 16]
+ 000000C2  E8 00000000 E     1			call	WriteString
+ 000000C7  5A		     1			pop		edx
+ 000000C8  E8 00000000 E			call Crlf
+						displayString	[ebp + 12]
+ 000000CD  52		     1			push	edx
+ 000000CE  8B 55 0C	     1			mov		edx, [ebp + 12]
+ 000000D1  E8 00000000 E     1			call	WriteString
+ 000000D6  5A		     1			pop		edx
+ 000000D7  E8 00000000 E			call Crlf
+						displayString	[ebp + 8]
+ 000000DC  52		     1			push	edx
+ 000000DD  8B 55 08	     1			mov		edx, [ebp + 8]
+ 000000E0  E8 00000000 E     1			call	WriteString
+ 000000E5  5A		     1			pop		edx
+ 000000E6  E8 00000000 E			call Crlf
+ 000000EB  C9					leave
+ 000000EC  C2 000C				ret 12
+ 000000EF			instruction ENDP
+
+				; *************************************************************************************************
+				; Description: Gets integers from the user.
+				; Receives: Address of array, buffer, and address of strings for reprompting, errors and the prompt.
+				; Returns: A filled array.
+				; Preconditions: 
+				; Registers Changed: None
+				; *************************************************************************************************
+ 000000EF			getInput PROC
+ 000000EF  C8 0000 00				enter 0,0
+ 000000F3  51					push	ecx
+ 000000F4  50					push	eax
+ 000000F5  53					push	ebx
+
+ 000000F6  B9 0000000A				mov		ecx, 10		
+ 000000FB  8B 45 18				mov		eax, [ebp + 24]			; Move the array into eax 
+ 000000FE				GET_ANOTHER_NUM:	
+ 000000FE  8B 5D 08				mov		ebx, [ebp + 8]
+ 00000101  8B DB				mov		ebx, ebx
+						displayString	[ebp + 8]
+ 00000103  52		     1			push	edx
+ 00000104  8B 55 08	     1			mov		edx, [ebp + 8]
+ 00000107  E8 00000000 E     1			call	WriteString
+ 0000010C  5A		     1			pop		edx
+
+ 0000010D  FF 75 0C				push	[ebp + 12]				; Push the reprompt on the stack
+ 00000110  FF 75 10				push	[ebp + 16]				; Push the error on the stack
+ 00000113  FF 75 14				push	[ebp + 20]				; Push the buffer on the stack
+ 00000116  50					push	eax						; Push an empty location of the array on the stack
+ 00000117  E8 000000C6				call	ReadVal
+						
+ 0000011C  83 C0 04				add		eax, 4
+						
+ 0000011F  E2 DD				loop	GET_ANOTHER_NUM
+
+ 00000121  5B					pop		ebx
+ 00000122  58					pop		eax
+ 00000123  59					pop		ecx
+ 00000124  C9					leave
+ 00000125  C2 0014				ret		20
+					
+ 00000128			getInput ENDP
+
+				; *************************************************************************************************
+				; Description: Calculates the sum and average of the array.
+				; Receives: The addresses of sum and average, the length of the array, and the address of the array.
+				; Returns: The values of the sum and average into the addresses of sum and average.
+				; Preconditions: None.
+				; Registers Changed: None.
+				; *************************************************************************************************
+ 00000128			calculate PROC
+ 00000128  C8 0000 00				enter 0,0
+
+ 0000012C  50					push	eax
+ 0000012D  53					push	ebx
+ 0000012E  51					push	ecx
+ 0000012F  52					push	edx
+ 00000130  56					push	esi
+
+ 00000131  8B 75 08				mov		esi, [ebp + 8]
+ 00000134  8B 4D 0C				mov		ecx, [ebp + 12]
+ 00000137  B8 00000000				mov		eax, 0
+					; First calculate the sum of all of the elements in the array.
+ 0000013C				CALC_SUM:
+ 0000013C  03 06				add		eax, [esi]	
+ 0000013E  83 C6 04				add		esi, 4
+ 00000141  E2 F9				loop	CALC_SUM
+ 00000143  8B 5D 14				mov		ebx, [ebp + 20]
+ 00000146  89 03				mov		[ebx], eax				; Move the value sum into sum.
+ 00000148  8B 5D 0C				mov		ebx, [ebp + 12]
+ 0000014B  33 D2				xor		edx, edx
+ 0000014D  F7 F3				div		ebx
+ 0000014F  8B 5D 10				mov		ebx, [ebp + 16]
+ 00000152  89 03				mov		[ebx], eax				; move the sum into sum.
+
+ 00000154  5E					pop		esi
+ 00000155  5A					pop		edx
+ 00000156  59					pop		ecx
+ 00000157  5B					pop		ebx
+ 00000158  58					pop		eax
+
+ 00000159  C9					leave
+ 0000015A  C2 0010				ret		16
+ 0000015D			calculate ENDP
+
+				; *************************************************************************************************
+				; Description: Prints the array, the sum of the numbers in the array, and the average of the array
+				; to the console.
+				; Receives: The value of sum, the value of the average, three strings, the length of the array, and
+				; the memory location of the array.
+				; Returns: Nothing.
+				; Preconditions: The array must not be empty. 
+				; Registers Changed: None.
+				; *************************************************************************************************
+ 0000015D			displayResults PROC
+ 0000015D  C8 0000 00				enter 0,0
+ 00000161  60					pushad	
+ 00000162  8B 75 08				mov		esi, [ebp + 8]				; Display the array contents.
+						displayString	[ebp + 24]
+ 00000165  52		     1			push	edx
+ 00000166  8B 55 18	     1			mov		edx, [ebp + 24]
+ 00000169  E8 00000000 E     1			call	WriteString
+ 0000016E  5A		     1			pop		edx
+ 0000016F  E8 00000000 E			call Crlf
+ 00000174  8B 4D 0C				mov		ecx, [ebp + 12]	
+ 00000177				PRINT_ARRAY:
+ 00000177  8B 06				mov		eax, [esi]
+ 00000179  50					push	eax
+ 0000017A  E8 00000109				call	WriteVal	
+ 0000017F  83 F9 01				cmp		ecx, 1
+ 00000182  74 0D				je		NO_COMMA
+						displayString	[ebp + 28]
+ 00000184  52		     1			push	edx
+ 00000185  8B 55 1C	     1			mov		edx, [ebp + 28]
+ 00000188  E8 00000000 E     1			call	WriteString
+ 0000018D  5A		     1			pop		edx
+ 0000018E  83 C6 04				add		esi, 4
+ 00000191				NO_COMMA:
+ 00000191  E2 E4				loop	PRINT_ARRAY	
+ 00000193  E8 00000000 E			call Crlf
+
+						displayString	[ebp + 20]			; Display the sum.
+ 00000198  52		     1			push	edx
+ 00000199  8B 55 14	     1			mov		edx, [ebp + 20]
+ 0000019C  E8 00000000 E     1			call	WriteString
+ 000001A1  5A		     1			pop		edx
+ 000001A2  FF 75 24				push	[ebp + 36]
+ 000001A5  E8 000000DE				call	writeVal
+ 000001AA  E8 00000000 E			call	Crlf
+
+						displayString	[ebp + 16]			; Display the average.
+ 000001AF  52		     1			push	edx
+ 000001B0  8B 55 10	     1			mov		edx, [ebp + 16]
+ 000001B3  E8 00000000 E     1			call	WriteString
+ 000001B8  5A		     1			pop		edx
+ 000001B9  FF 75 20				push	[ebp + 32]
+ 000001BC  E8 000000C7				call	writeVal
+ 000001C1  E8 00000000 E			call	Crlf
+ 000001C6  61					popad
+ 000001C7  C9					leave
+ 000001C8  C2 0018				ret		24
+ 000001CB			displayResults ENDP
+
+				; *************************************************************************************************
+				; Description: Prints the ending message to the console.
+				; Receives: A string on the stack.
+				; Returns: Nothing.
+				; Preconditions: None.
+				; Registers Changed: None.
+				; *************************************************************************************************
+ 000001CB			thankYou PROC
+ 000001CB  C8 0000 00				enter	0,0
+						displayString	[ebp + 8]
+ 000001CF  52		     1			push	edx
+ 000001D0  8B 55 08	     1			mov		edx, [ebp + 8]
+ 000001D3  E8 00000000 E     1			call	WriteString
+ 000001D8  5A		     1			pop		edx
+ 000001D9  E8 00000000 E			call Crlf
+ 000001DE  C9					leave
+ 000001DF  C2 0004				ret		4
+ 000001E2			thankYou ENDP
+
+				; *************************************************************************************************
+				; Description:
+				; Receives:
+				; Returns: 
+				; Preconditions:
+				; Registers Changed:
+				; *************************************************************************************************
+ 000001E2			ReadVal PROC
+					LOCAL	strLen:DWORD, accumulator:DWORD, rMultiplier:DWORD
+ 000001E2  55		   *	    push   ebp
+ 000001E3  8B EC	   *	    mov    ebp, esp
+ 000001E5  83 C4 F4	   *	    add    esp, 0FFFFFFF4h
+ 000001E8  60					pushad
+ 000001E9				GET_VALUE:
+ 000001E9  B8 00000000				mov		eax, 0
+ 000001EE  C7 45 F8				mov		accumulator, 0
+	   00000000
+ 000001F5  C7 45 F4				mov		rMultiplier, 1
+	   00000001
+						getString	[ebp + 12], strLen
+ 000001FC  50		     1			push	eax
+ 000001FD  52		     1			push	edx
+ 000001FE  51		     1			push	ecx
+ 000001FF  8B 55 0C	     1			mov		edx, [ebp + 12]
+ 00000202  B9 00000064	     1			mov		ecx, MAX_LEN
+ 00000207  E8 00000000 E     1			call	ReadString
+ 0000020C  89 45 FC	     1			mov		strLen, eax	
+ 0000020F  59		     1			pop		ecx
+ 00000210  5A		     1			pop		edx
+ 00000211  58		     1			pop		eax	
+ 00000212  8B 45 FC				mov		eax, strLen
+ 00000215  BB 0000000A				mov		ebx, 10
+						; Check to see if there are too many digits in the string.
+ 0000021A  3B C3				cmp		eax, ebx 
+ 0000021C  7F 4C				jg		ERROR_MESSAGE
+
+ 0000021E  8B 4D FC				mov		ecx, strLen
+ 00000221  8B 75 0C				mov		esi, [ebp + 12]
+ 00000224  8B FE				mov		edi, esi
+ 00000226  03 F1				add		esi, ecx
+ 00000228  4E					dec		esi
+ 00000229  8B FE				mov		edi, esi
+
+						; Convert the ascii symbol to a it's decimal value by subtracting 48, multiplying by it's place value,
+						; and then adding it to the accumulator.
+ 0000022B				CHECK_NUMS:
+ 0000022B  B8 00000000				mov		eax, 0
+ 00000230  FD					std	
+ 00000231  AC					lodsb
+ 00000232  3C 30				cmp		al, 48
+ 00000234  7C 34				jl		ERROR_MESSAGE
+ 00000236  3C 39				cmp		al, 57
+ 00000238  7F 30				jg		ERROR_MESSAGE
+						
+ 0000023A  2C 30				sub		al, 48
+ 0000023C  8B 5D F4				mov		ebx, rMultiplier
+ 0000023F  F7 E3				mul		ebx
+ 00000241  01 45 F8				add		accumulator, eax	
+ 00000244  8B 45 F8				mov		eax, accumulator
+
+						; The case that the number is too large for the eax register aka it carries over to the edx register.
+ 00000247  72 21				jc		ERROR_MESSAGE
+ 00000249  83 FA 00				cmp		edx, 0
+ 0000024C  75 1C				jne		ERROR_MESSAGE
+
+ 0000024E  BB 0000000A				mov		ebx, 10
+ 00000253  8B 45 F4				mov		eax, rMultiplier
+ 00000256  F7 E3				mul		ebx
+ 00000258  89 45 F4				mov		rMultiplier, eax
+ 0000025B  E2 CE				loop	CHECK_NUMS
+						
+						; Move the total number into it's location in the array.
+ 0000025D  8B 45 08				mov		eax, [ebp + 8]
+ 00000260  8B 5D F8				mov		ebx, accumulator
+ 00000263  89 18				mov		[eax], ebx 
+						
+ 00000265  61					popad
+ 00000266  C9		   *	    leave  
+ 00000267  C2 0010				ret		16
+							
+ 0000026A				ERROR_MESSAGE:
+						displayString	[ebp + 16]
+ 0000026A  52		     1			push	edx
+ 0000026B  8B 55 10	     1			mov		edx, [ebp + 16]
+ 0000026E  E8 00000000 E     1			call	WriteString
+ 00000273  5A		     1			pop		edx
+ 00000274  E8 00000000 E			call	Crlf
+						displayString	[ebp + 20]
+ 00000279  52		     1			push	edx
+ 0000027A  8B 55 14	     1			mov		edx, [ebp + 20]
+ 0000027D  E8 00000000 E     1			call	WriteString
+ 00000282  5A		     1			pop		edx
+ 00000283  E9 FFFFFF61				jmp		GET_VALUE
+						
+ 00000288			ReadVal ENDP
+
+				; *************************************************************************************************
+				; Description: This procedure takes an integer and converts it to a string and displays it on the 
+				; console.
+				; Receives: A string on the stack.
+				; Returns: Nothing.
+				; Preconditions: A string must be pushed on the stack.
+				; Registers Changed: None
+				; *************************************************************************************************
+ 00000288			writeVal PROC
+						LOCAL	forward[11]:BYTE, reverse[11]:BYTE, wMultiplier:DWORD
+
+ 00000288  55		   *	    push   ebp
+ 00000289  8B EC	   *	    mov    ebp, esp
+ 0000028B  83 C4 E4	   *	    add    esp, 0FFFFFFE4h
+ 0000028E  60					pushad
+						; Set all the values in the forward and reverse local variables to 0.
+						clearString forward
+ 0000028F  53		     1			push	ebx
+ 00000290  51		     1			push	ecx
+ 00000291  BB 00000000	     1			mov		ebx, 0 
+ 00000296  B9 0000000B	     1			mov		ecx, LENGTHOF forward
+ 0000029B		     1		??0000:
+ 0000029B  C6 44 1D F5 00    1			mov		forward[ebx], 0
+ 000002A0  43		     1			inc		ebx	
+ 000002A1  E2 F8	     1			loop	??0000	
+ 000002A3  59		     1			pop		ecx
+ 000002A4  5B		     1			pop		ebx
+						clearString reverse	
+ 000002A5  53		     1			push	ebx
+ 000002A6  51		     1			push	ecx
+ 000002A7  BB 00000000	     1			mov		ebx, 0 
+ 000002AC  B9 0000000B	     1			mov		ecx, LENGTHOF reverse
+ 000002B1		     1		??0001:
+ 000002B1  C6 44 1D EA 00    1			mov		reverse[ebx], 0
+ 000002B6  43		     1			inc		ebx	
+ 000002B7  E2 F8	     1			loop	??0001	
+ 000002B9  59		     1			pop		ecx
+ 000002BA  5B		     1			pop		ebx
+
+						; Converts the value to a the ascii character and place it in forward. The number will be backwards string.
+ 000002BB  8B 45 08				mov		eax, [ebp + 8]
+ 000002BE  C7 45 E4				mov		wMultiplier, 10
+	   0000000A
+ 000002C5  BE 00000000				mov		esi, 0
+ 000002CA				CONVERT_VALUE:
+ 000002CA  33 D2				xor		edx, edx
+ 000002CC  8B 5D E4				mov		ebx, wMultiplier
+ 000002CF  F7 F3				div		ebx
+ 000002D1  83 C2 30				add		edx, 48
+ 000002D4  88 54 35 F5				mov		forward[esi], dl
+ 000002D8  46					inc		esi	
+ 000002D9  83 F8 00				cmp		eax, 0
+ 000002DC  75 EC				jne		CONVERT_VALUE
+						
+						; Load forward into reverse in the correct orientation.
+ 000002DE  8B CE				mov		ecx, esi
+ 000002E0  8D 75 F5				lea		esi, forward 
+ 000002E3  03 F1				add		esi, ecx
+ 000002E5  4E					dec		esi
+ 000002E6  8D 7D EA				lea		edi, reverse
+ 000002E9				REVERSE_STRING:
+ 000002E9  FD					std
+ 000002EA  AC					lodsb
+ 000002EB  FC					cld
+ 000002EC  AA					stosb
+ 000002ED  E2 FA				loop	REVERSE_STRING
+ 000002EF  8D 55 EA				lea		edx, reverse
+						displayString edx 
+ 000002F2  52		     1			push	edx
+ 000002F3  8B D2	     1			mov		edx, edx
+ 000002F5  E8 00000000 E     1			call	WriteString
+ 000002FA  5A		     1			pop		edx
+
+ 000002FB  61					popad
+ 000002FC  C9		   *	    leave  
+ 000002FD  C2 0004				ret		4	
+ 00000300			writeVal ENDP
+
 
 				END main
-Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/01/19 10:18:03
+Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/08/19 19:47:36
 1Designing low-level I/O procedures	(Project6.asm	     Symbols 2 - 1
 
 
@@ -216,6 +649,8 @@ Macros:
 
                 N a m e                 Type
 
+clearString  . . . . . . . . . .	Proc
+displayString  . . . . . . . . .	Proc
 getString  . . . . . . . . . . .	Proc
 
 
@@ -307,8 +742,8 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 0000025A Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000003A Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 000002C2 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000300 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -378,6 +813,13 @@ ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadVal  . . . . . . . . . . . .	P Near	 000001E2 _TEXT	Length= 000000A6 Public STDCALL
+  strLen . . . . . . . . . . . .	DWord	 bp - 00000004
+  accumulator  . . . . . . . . .	DWord	 bp - 00000008
+  rMultiplier  . . . . . . . . .	DWord	 bp - 0000000C
+  GET_VALUE  . . . . . . . . . .	L Near	 000001E9 _TEXT	
+  CHECK_NUMS . . . . . . . . . .	L Near	 0000022B _TEXT	
+  ERROR_MESSAGE  . . . . . . . .	L Near	 0000026A _TEXT	
 SetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleMode . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -415,9 +857,27 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000003A Public STDCALL
+calculate  . . . . . . . . . . .	P Near	 00000128 _TEXT	Length= 00000035 Public STDCALL
+  CALC_SUM . . . . . . . . . . .	L Near	 0000013C _TEXT	
+displayResults . . . . . . . . .	P Near	 0000015D _TEXT	Length= 0000006E Public STDCALL
+  PRINT_ARRAY  . . . . . . . . .	L Near	 00000177 _TEXT	
+  NO_COMMA . . . . . . . . . . .	L Near	 00000191 _TEXT	
+getInput . . . . . . . . . . . .	P Near	 000000EF _TEXT	Length= 00000039 Public STDCALL
+  GET_ANOTHER_NUM  . . . . . . .	L Near	 000000FE _TEXT	
+instruction  . . . . . . . . . .	P Near	 000000BA _TEXT	Length= 00000035 Public STDCALL
+introduction . . . . . . . . . .	P Near	 00000094 _TEXT	Length= 00000026 Public STDCALL
+main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000094 Public STDCALL
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
+thankYou . . . . . . . . . . . .	P Near	 000001CB _TEXT	Length= 00000017 Public STDCALL
+writeVal . . . . . . . . . . . .	P Near	 00000288 _TEXT	Length= 00000078 Public STDCALL
+  forward  . . . . . . . . . . .	Byte	 bp - 0000000B
+  reverse  . . . . . . . . . . .	Byte	 bp - 00000016
+  wMultiplier  . . . . . . . . .	DWord	 bp - 0000001C
+  ??0000 . . . . . . . . . . . .	L Near	 0000029B _TEXT	
+  ??0001 . . . . . . . . . . . .	L Near	 000002B1 _TEXT	
+  CONVERT_VALUE  . . . . . . . .	L Near	 000002CA _TEXT	
+  REVERSE_STRING . . . . . . . .	L Near	 000002E9 _TEXT	
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 
 
@@ -449,7 +909,6 @@ ENABLE_PROCESSED_OUTPUT  . . . .	Number	 00000001h
 ENABLE_WINDOW_INPUT  . . . . . .	Number	 00000008h   
 ENABLE_WRAP_AT_EOL_OUTPUT  . . .	Number	 00000002h   
 ENHANCED_KEY . . . . . . . . . .	Number	 00000100h   
-ERROR  . . . . . . . . . . . . .	Byte	 00000179 _DATA	
 FALSE  . . . . . . . . . . . . .	Number	 00000000h   
 FILE_APPEND_DATA . . . . . . . .	Number	 00000004h   
 FILE_ATTRIBUTE_ARCHIVE . . . . .	Number	 00000020h   
@@ -508,7 +967,7 @@ KEY_EVENT  . . . . . . . . . . .	Number	 00000001h
 KEY_MASKS  . . . . . . . . . . .	Number	 0000001Fh   
 LEFT_ALT_PRESSED . . . . . . . .	Number	 00000002h   
 LEFT_CTRL_PRESSED  . . . . . . .	Number	 00000008h   
-MAX  . . . . . . . . . . . . . .	Number	 FFFFFFFFh   
+MAX_LEN  . . . . . . . . . . . .	Number	 00000064h   
 MB_ABORTRETRYIGNORE  . . . . . .	Number	 00000002h   
 MB_APPLMODAL . . . . . . . . . .	Number	 00000000h   
 MB_CANCELTRYCONTINUE . . . . . .	Number	 00000006h   
@@ -534,7 +993,6 @@ MB_USERICON  . . . . . . . . . .	Number	 00000080h
 MB_YESNOCANCEL . . . . . . . . .	Number	 00000003h   
 MB_YESNO . . . . . . . . . . . .	Number	 00000004h   
 MENU_EVENT . . . . . . . . . . .	Number	 00000008h   
-MIN  . . . . . . . . . . . . . .	Number	 00000000h   
 MOUSE_EVENT  . . . . . . . . . .	Number	 00000002h   
 MessageBox . . . . . . . . . . .	Text   	 MessageBoxA
 NULL . . . . . . . . . . . . . .	Number	 00000000h   
@@ -637,15 +1095,19 @@ VK_UP  . . . . . . . . . . . . .	Number	 00000026h
 WINDOW_BUFFER_SIZE_EVENT . . . .	Number	 00000004h   
 WriteConsoleOutputCharacter  . .	Text   	 WriteConsoleOutputCharacterA
 WriteConsole . . . . . . . . . .	Text   	 WriteConsoleA
-array  . . . . . . . . . . . . .	DWord	 00000227 _DATA	
+array  . . . . . . . . . . . . .	DWord	 0000022A _DATA	
+average  . . . . . . . . . . . .	DWord	 000002BA _DATA	
 black  . . . . . . . . . . . . .	Number	 00000000h   
 blue . . . . . . . . . . . . . .	Number	 00000001h   
 brown  . . . . . . . . . . . . .	Number	 00000006h   
-buffer . . . . . . . . . . . . .	Byte	 0000024F _DATA	
+bufferLen  . . . . . . . . . . .	DWord	 000002B6 _DATA	
+buffer . . . . . . . . . . . . .	Byte	 00000252 _DATA	
+commaSpace . . . . . . . . . . .	Byte	 00000227 _DATA	
 cyan . . . . . . . . . . . . . .	Number	 00000003h   
 dispArray  . . . . . . . . . . .	Byte	 000001C1 _DATA	
 dispAve  . . . . . . . . . . . .	Byte	 00000202 _DATA	
 dispSum  . . . . . . . . . . . .	Byte	 000001E4 _DATA	
+error  . . . . . . . . . . . . .	Byte	 00000179 _DATA	
 exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
 gray . . . . . . . . . . . . . .	Number	 00000008h   
 green  . . . . . . . . . . . . .	Number	 00000002h   
@@ -664,6 +1126,7 @@ magenta  . . . . . . . . . . . .	Number	 00000005h
 prompt . . . . . . . . . . . . .	Byte	 00000144 _DATA	
 red  . . . . . . . . . . . . . .	Number	 00000004h   
 reprompt . . . . . . . . . . . .	Byte	 00000166 _DATA	
+sum  . . . . . . . . . . . . . .	DWord	 000002BE _DATA	
 thanks . . . . . . . . . . . . .	Byte	 00000213 _DATA	
 white  . . . . . . . . . . . . .	Number	 0000000Fh   
 wsprintf . . . . . . . . . . . .	Text   	 wsprintfA

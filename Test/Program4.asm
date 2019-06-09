@@ -20,19 +20,26 @@ LOWERLIM = 1
 .data
 
 ; Strings that will be shown to the user.
+str1 BYTE "Introduction", 0
 
-
-idArray WORD 3546, 1534, 12, 3481, 154, 6423
-x DWORD LENGTHOF idArray
-y DWORD SIZEOF idArray
-z DWORD TYPE idArray
 .code
 
 main PROC
-	mov		eax, y
+	mov	esi, OFFSET str1
+	add	esi, 5
+	mov	ecx, 4
+	cld
+more1:
+	lodsb
+	call	WriteChar
+	loop	more1
 
-	call	WriteDec
-	call	Crlf
+	mov	ecx, 4
+	std
+more2:
+	lodsb
+	call	WriteChar
+	loop	more2
 	exit	; exit to operating systemk
 main ENDP
 END main

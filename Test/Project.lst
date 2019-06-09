@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.16.27027.1	    05/24/19 18:33:04
+Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/07/19 17:10:20
  Composite Numbers	(Program4.asm			     Page 1 - 1
 
 
@@ -41,27 +41,35 @@ Microsoft (R) Macro Assembler Version 14.16.27027.1	    05/24/19 18:33:04
  00000000			.data
 
 				; Strings that will be shown to the user.
+ 00000000 49 6E 74 72 6F	str1 BYTE "Introduction", 0
+	   64 75 63 74 69
+	   6F 6E 00
 
-
- 00000000 0DDA 05FE 000C	idArray WORD 3546, 1534, 12, 3481, 154, 6423
-	   0D99 009A 1917
- 0000000C 00000006		x DWORD LENGTHOF idArray
- 00000010 0000000C		y DWORD SIZEOF idArray
- 00000014 00000002		z DWORD TYPE idArray
  00000000			.code
 
  00000000			main PROC
- 00000000  A1 00000010 R		mov		eax, y
+ 00000000  BE 00000000 R		mov	esi, OFFSET str1
+ 00000005  83 C6 05			add	esi, 5
+ 00000008  B9 00000004			mov	ecx, 4
+ 0000000D  FC				cld
+ 0000000E			more1:
+ 0000000E  AC				lodsb
+ 0000000F  E8 00000000 E		call	WriteChar
+ 00000014  E2 F8			loop	more1
 
- 00000005  E8 00000000 E		call	WriteDec
- 0000000A  E8 00000000 E		call	Crlf
+ 00000016  B9 00000004			mov	ecx, 4
+ 0000001B  FD				std
+ 0000001C			more2:
+ 0000001C  AC				lodsb
+ 0000001D  E8 00000000 E		call	WriteChar
+ 00000022  E2 F8			loop	more2
 					exit	; exit to operating systemk
- 0000000F  6A 00	   *	    push   +000000000h
- 00000011  E8 00000000 E   *	    call   ExitProcess
- 00000016			main ENDP
+ 00000024  6A 00	   *	    push   +000000000h
+ 00000026  E8 00000000 E   *	    call   ExitProcess
+ 0000002B			main ENDP
 				END main
 
-Microsoft (R) Macro Assembler Version 14.16.27027.1	    05/24/19 18:33:04
+Microsoft (R) Macro Assembler Version 14.16.27027.1	    06/07/19 17:10:20
  Composite Numbers	(Program4.asm			     Symbols 2 - 1
 
 
@@ -155,8 +163,8 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00000018 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 00000016 Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 0000000D Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000002B Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -263,7 +271,9 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000016 Public STDCALL
+main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000002B Public STDCALL
+  more1  . . . . . . . . . . . .	L Near	 0000000E _TEXT	
+  more2  . . . . . . . . . . . .	L Near	 0000001C _TEXT	
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
@@ -491,7 +501,6 @@ cyan . . . . . . . . . . . . . .	Number	 00000003h
 exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
 gray . . . . . . . . . . . . . .	Number	 00000008h   
 green  . . . . . . . . . . . . .	Number	 00000002h   
-idArray  . . . . . . . . . . . .	Word	 00000000 _DATA	
 lightBlue  . . . . . . . . . . .	Number	 00000009h   
 lightCyan  . . . . . . . . . . .	Number	 0000000Bh   
 lightGray  . . . . . . . . . . .	Number	 00000007h   
@@ -500,12 +509,10 @@ lightMagenta . . . . . . . . . .	Number	 0000000Dh
 lightRed . . . . . . . . . . . .	Number	 0000000Ch   
 magenta  . . . . . . . . . . . .	Number	 00000005h   
 red  . . . . . . . . . . . . . .	Number	 00000004h   
+str1 . . . . . . . . . . . . . .	Byte	 00000000 _DATA	
 white  . . . . . . . . . . . . .	Number	 0000000Fh   
 wsprintf . . . . . . . . . . . .	Text   	 wsprintfA
-x  . . . . . . . . . . . . . . .	DWord	 0000000C _DATA	
 yellow . . . . . . . . . . . . .	Number	 0000000Eh   
-y  . . . . . . . . . . . . . . .	DWord	 00000010 _DATA	
-z  . . . . . . . . . . . . . . .	DWord	 00000014 _DATA	
 
 	   0 Warnings
 	   0 Errors
